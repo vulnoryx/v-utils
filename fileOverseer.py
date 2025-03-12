@@ -40,6 +40,7 @@ def checkDefaultDirectories(path):
     createFolder(path, compressed_archives_folder)
     createFolder(path, sounds_and_music_folder)
     createFolder(path, videos_folder)
+    createFolder(path, executables_folder)
     createFolder(path, other_files_folder)
 
 class MyHandler(FileSystemEventHandler):
@@ -54,6 +55,8 @@ class MyHandler(FileSystemEventHandler):
                 file_name = os.path.basename(f);
                 file_data = os.path.splitext(file_name)
                 
+                moved = False
+
                 # TODO: way too much repetition. Needs fix
 
                 # sort images
@@ -61,6 +64,7 @@ class MyHandler(FileSystemEventHandler):
                     if file_data[1] == extention:
                         print(currentTime+": moving {} to Pictures".format(file_data[0]+file_data[1]))
                         os.rename(f, path+pictures_folder+"/"+file_data[0]+file_data[1])
+                        moved = True
                         break
 
                 # sort documents
@@ -68,6 +72,7 @@ class MyHandler(FileSystemEventHandler):
                     if file_data[1] == extention:
                         print(currentTime+": moving {} to Documents".format(file_data[0]+file_data[1]))
                         os.rename(f, path+documents_folder+"/"+file_data[0]+file_data[1])
+                        moved = True
                         break
 
                 # sort compressed files 
@@ -75,6 +80,7 @@ class MyHandler(FileSystemEventHandler):
                     if file_data[1] == extention:
                         print(currentTime+": moving {} to ZipFiles".format(file_data[0]+file_data[1]))
                         os.rename(f, path+compressed_archives_folder+"/"+file_data[0]+file_data[1])
+                        moved = True
                         break
 
                 # sort sound and music files
@@ -82,6 +88,7 @@ class MyHandler(FileSystemEventHandler):
                     if file_data[1] == extention:
                         print(currentTime+": moving {} to SoundAndMusic".format(file_data[0]+file_data[1]))
                         os.rename(f, path+sounds_and_music_folder+"/"+file_data[0]+file_data[1])
+                        moved = True
                         break
                 
                 # sort video files
@@ -89,6 +96,7 @@ class MyHandler(FileSystemEventHandler):
                     if file_data[1] == extention:
                         print(currentTime+": moving {} to Videos".format(file_data[0]+file_data[1]))
                         os.rename(f, path+videos_folder+"/"+file_data[0]+file_data[1])
+                        moved = True
                         break
                 
                 # sort executable files
@@ -96,14 +104,22 @@ class MyHandler(FileSystemEventHandler):
                     if file_data[1] == extention:
                         print(currentTime+": moving {} to Executables".format(file_data[0]+file_data[1]))
                         os.rename(f, path+executables_folder+"/"+file_data[0]+file_data[1])
+                        moved = True
                         break
                 
+                if moved:
+                    continue
+
                 # extentions in 'ignore_extentions' wont be moved
-                for extention in ignore_extentions:
-                    if file_data[1] != extention:
-                        print(currentTime+": moving {} to Other".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+other_files_folder+"/"+file_data[0]+file_data[1])
-                        break
+                # ignore = False
+                # for extention in ignore_extentions:
+                #     if file_data[1] == extention:
+                #         ignore = True
+                #         break
+                    
+                # if not ignore:
+                #     print(currentTime+": moving {} to Other".format(file_data[0]+file_data[1]))
+                #     os.rename(f, path+other_files_folder+"/"+file_data[0]+file_data[1])
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
