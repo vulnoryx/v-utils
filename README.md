@@ -2,7 +2,7 @@
 
 A collection of utility scripts.
 
-## Overseer
+## File Overseer
 
 ### Usage:
 `python3 fileOverseer.py /path/to/directory`
