@@ -48,7 +48,7 @@ def moveBasedOnExtention(currentTime, file_path, move_folder, extention_list):
 
     for extention in extention_list:
         if file_data[1] == extention:
-            print(currentTime+": moving {} to ".format(file_data[0]+file_data[1])+move_folder)
+            print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
             os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
             moved = True
             break
