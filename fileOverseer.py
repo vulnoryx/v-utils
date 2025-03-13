@@ -43,6 +43,16 @@ def checkDefaultDirectories(path):
     createFolder(path, executables_folder)
     createFolder(path, other_files_folder)
 
+def moveBasedOnExtention(currentTime, file_path, move_folder, extention_list):
+    file_data = os.path.splitext(os.path.basename(file_path))
+
+    for extention in extention_list:
+        if file_data[1] == extention:
+            print(currentTime+": moving {} to ".format(file_data[0]+file_data[1])+move_folder)
+            os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
+            moved = True
+            break
+
 class MyHandler(FileSystemEventHandler):
     def on_any_event(self, event):
         currentTime = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -50,76 +60,13 @@ class MyHandler(FileSystemEventHandler):
         for filename in os.listdir(path):
             f = os.path.join(path, filename)
 
-            # check if it is a file
             if os.path.isfile(f):
-                file_name = os.path.basename(f);
-                file_data = os.path.splitext(file_name)
-                
-                moved = False
-
-                # TODO: way too much repetition. Needs fix
-
-                # sort images
-                for extention in image_extentions:
-                    if file_data[1] == extention:
-                        print(currentTime+": moving {} to Pictures".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+pictures_folder+"/"+file_data[0]+file_data[1])
-                        moved = True
-                        break
-
-                # sort documents
-                for extention in document_extentions:
-                    if file_data[1] == extention:
-                        print(currentTime+": moving {} to Documents".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+documents_folder+"/"+file_data[0]+file_data[1])
-                        moved = True
-                        break
-
-                # sort compressed files 
-                for extention in compressed_archive_extentions:
-                    if file_data[1] == extention:
-                        print(currentTime+": moving {} to ZipFiles".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+compressed_archives_folder+"/"+file_data[0]+file_data[1])
-                        moved = True
-                        break
-
-                # sort sound and music files
-                for extention in sound_and_music_file_extentions:
-                    if file_data[1] == extention:
-                        print(currentTime+": moving {} to SoundAndMusic".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+sounds_and_music_folder+"/"+file_data[0]+file_data[1])
-                        moved = True
-                        break
-                
-                # sort video files
-                for extention in video_file_extentions:
-                    if file_data[1] == extention:
-                        print(currentTime+": moving {} to Videos".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+videos_folder+"/"+file_data[0]+file_data[1])
-                        moved = True
-                        break
-                
-                # sort executable files
-                for extention in executable_file_extentions:
-                    if file_data[1] == extention:
-                        print(currentTime+": moving {} to Executables".format(file_data[0]+file_data[1]))
-                        os.rename(f, path+executables_folder+"/"+file_data[0]+file_data[1])
-                        moved = True
-                        break
-                
-                if moved:
-                    continue
-
-                # extentions in 'ignore_extentions' wont be moved
-                # ignore = False
-                # for extention in ignore_extentions:
-                #     if file_data[1] == extention:
-                #         ignore = True
-                #         break
-                    
-                # if not ignore:
-                #     print(currentTime+": moving {} to Other".format(file_data[0]+file_data[1]))
-                #     os.rename(f, path+other_files_folder+"/"+file_data[0]+file_data[1])
+                moveBasedOnExtention(currentTime, f, pictures_folder,               image_extentions);
+                moveBasedOnExtention(currentTime, f, documents_folder,              document_extentions);
+                moveBasedOnExtention(currentTime, f, compressed_archives_folder,    compressed_archive_extentions);
+                moveBasedOnExtention(currentTime, f, sounds_and_music_folder,       sound_and_music_file_extentions);
+                moveBasedOnExtention(currentTime, f, videos_folder,                 video_file_extentions);
+                moveBasedOnExtention(currentTime, f, executables_folder,            executable_file_extentions);
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
@@ -127,11 +74,13 @@ if __name__ == "__main__":
 
     checkDefaultDirectories(path)
     
+    # set up observer
     event_handler = MyHandler()
     observer = Observer()
     observer.schedule(event_handler, path, recursive=False)
     observer.start()
 
+    # run programm indefinently except if Ctrl+C is pressed
     try:
         while True:
             time.sleep(1)
