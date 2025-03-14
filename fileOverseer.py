@@ -6,6 +6,18 @@ import getpass # for getting username
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+# color definition
+COLOR_RESET =   "\033[0m"
+COLOR_WHITE =   "\033[0m"
+COLOR_GRAY =    "\033[30m"
+COLOR_RED =     "\033[31m"
+COLOR_GREEN =   "\033[32m"
+COLOR_YELLOW =  "\033[33m"
+COLOR_BLUE =    "\033[34m"
+COLOR_PURPLE =  "\033[35m"
+COLOR_CYAN =    "\033[36m"
+
+# path...ye...just path
 path = ''
 
 # folder definition
@@ -33,6 +45,23 @@ ignore_prefixes =                 ["Unconfirmed ", ".org.chromium.Chromium"]
 def fileExtits(path):
     return os.path.isfile(path)
 
+# moves a file to the "move_folder"
+# if a file with the same name is found, the file will have a "_" at the end of its name to not override the already present file
+def moveFile(currentTime, file_data, file_path, move_folder):
+    moved = False
+    currentTime = COLOR_YELLOW+currentTime+":"+COLOR_WHITE
+
+    if fileExtits(path+move_folder+"/"+file_data[0]+file_data[1]):
+        print(currentTime+" moving "+COLOR_BLUE+"{}".format(file_data[0]+"_"+file_data[1])+COLOR_WHITE+" to "+move_folder)
+        os.rename(file_path, path+move_folder+"/"+file_data[0]+"_"+file_data[1])
+        moved = True
+    else:
+        print(currentTime+" moving "+COLOR_BLUE+"{}".format(file_data[0]+file_data[1])+COLOR_WHITE+" to "+move_folder)
+        os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
+        moved = True
+
+    return moved;
+
 # checks if a folder exists. If not the folder will be created
 def createFolder(path, folder_name):
     if not os.path.exists(path+folder_name):
@@ -53,44 +82,30 @@ def shouldIgnoreBasedOnPrefix(file_name):
 
 def moveBasedOnExtention(currentTime, file_path, move_folder, extention_list):
     file_data = os.path.splitext(os.path.basename(file_path))
-    moved = False
 
     for extention in extention_list:
         if file_data[1] == extention:
-            if fileExtits(path+move_folder+"/"+file_data[0]+file_data[1]):
-                print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+"_"+file_data[1])+move_folder)
-                os.rename(file_path, path+move_folder+"/"+file_data[0]+"_"+file_data[1])
-                moved = True
-                break
-            else:
-                print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
-                os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
-                moved = True
-                break
+            if moveFile(currentTime, file_data, file_path, move_folder):
+                return True
     
-    return moved
+    return False
 
 def moveIgnoringExtention(currentTime, file_path, move_folder, extention_list):
     file_data = os.path.splitext(os.path.basename(file_path))
-    moveFile = True
+    shouldMoveFile = True
     
     # check extentions
     for extention in extention_list:
         if file_data[1] == extention:
-            moveFile = False
+            shouldMoveFile = False
             break
     
     # check prefixes 
-    moveFile = not shouldIgnoreBasedOnPrefix(file_data[0])
+    shouldMoveFile = not shouldIgnoreBasedOnPrefix(file_data[0])
     
     # if not listed as ignored, proceed to move file
-    if moveFile:
-        if fileExtits(path+move_folder+"/"+file_data[0]+file_data[1]):
-            print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+"_"+file_data[1])+move_folder)
-            os.rename(file_path, path+move_folder+"/"+file_data[0]+"_"+file_data[1])
-        else:
-            print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
-            os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
+    if shouldMoveFile:
+        moveFile(currentTime, file_data, file_path, move_folder)
 
 
 class MyHandler(FileSystemEventHandler):
@@ -118,7 +133,7 @@ class MyHandler(FileSystemEventHandler):
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
-    print("\033[33mworking directory: \033[0m"+path)
+    print(COLOR_YELLOW+"working directory: "+COLOR_WHITE+path)
 
     checkDefaultDirectories(path)
     
