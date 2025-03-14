@@ -28,6 +28,8 @@ executable_file_extentions =      ['.exe', '.bin', '.AppImage']
 ignore_extentions =               ['.crdownload', '.part', '.download', '.tmp', '.filepart', '.opdownload', '.!ut', '.bc!', '.dwl', '.asd',
                                    '.wbk', '.swp', '.swo', '.lk', '.gz.tmp']
 
+ignore_prefixes =                 ["Unconfirmed ", ".org.chromium.Chromium"]
+
 # checks if a folder exists. If not the folder will be created
 def createFolder(path, folder_name):
     if not os.path.exists(path+folder_name):
@@ -43,8 +45,12 @@ def checkDefaultDirectories(path):
     createFolder(path, executables_folder)
     createFolder(path, other_files_folder)
 
+def shouldIgnoreBasedOnPrefix(file_name):
+    return (any(file_name.startswith(prefix) for prefix in ignore_prefixes))
+
 def moveBasedOnExtention(currentTime, file_path, move_folder, extention_list):
     file_data = os.path.splitext(os.path.basename(file_path))
+    moved = False
 
     for extention in extention_list:
         if file_data[1] == extention:
@@ -52,6 +58,27 @@ def moveBasedOnExtention(currentTime, file_path, move_folder, extention_list):
             os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
             moved = True
             break
+    
+    return moved
+
+def moveIgnoringExtention(currentTime, file_path, move_folder, extention_list):
+    file_data = os.path.splitext(os.path.basename(file_path))
+    moveFile = True
+    
+    # check extentions
+    for extention in extention_list:
+        if file_data[1] == extention:
+            moveFile = False
+            break
+    
+    # check prefixes 
+    moveFile = not shouldIgnoreBasedOnPrefix(file_data[0])
+    
+    # if not listed as ignored, proceed to move file
+    if moveFile:
+        print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
+        os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
+
 
 class MyHandler(FileSystemEventHandler):
     def on_any_event(self, event):
@@ -61,12 +88,20 @@ class MyHandler(FileSystemEventHandler):
             f = os.path.join(path, filename)
 
             if os.path.isfile(f):
-                moveBasedOnExtention(currentTime, f, pictures_folder,               image_extentions);
-                moveBasedOnExtention(currentTime, f, documents_folder,              document_extentions);
-                moveBasedOnExtention(currentTime, f, compressed_archives_folder,    compressed_archive_extentions);
-                moveBasedOnExtention(currentTime, f, sounds_and_music_folder,       sound_and_music_file_extentions);
-                moveBasedOnExtention(currentTime, f, videos_folder,                 video_file_extentions);
-                moveBasedOnExtention(currentTime, f, executables_folder,            executable_file_extentions);
+                if moveBasedOnExtention(currentTime, f, pictures_folder,               image_extentions):
+                    continue
+                if moveBasedOnExtention(currentTime, f, documents_folder,              document_extentions):
+                    continue
+                if moveBasedOnExtention(currentTime, f, compressed_archives_folder,    compressed_archive_extentions):
+                    continue
+                if moveBasedOnExtention(currentTime, f, sounds_and_music_folder,       sound_and_music_file_extentions):
+                    continue
+                if moveBasedOnExtention(currentTime, f, videos_folder,                 video_file_extentions):
+                    continue
+                if moveBasedOnExtention(currentTime, f, executables_folder,            executable_file_extentions):
+                    continue
+
+                moveIgnoringExtention(  currentTime, f, other_files_folder,            ignore_extentions)
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
