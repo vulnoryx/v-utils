@@ -30,6 +30,9 @@ ignore_extentions =               ['.crdownload', '.part', '.download', '.tmp', 
 
 ignore_prefixes =                 ["Unconfirmed ", ".org.chromium.Chromium"]
 
+def fileExtits(path):
+    return os.path.isfile(path)
+
 # checks if a folder exists. If not the folder will be created
 def createFolder(path, folder_name):
     if not os.path.exists(path+folder_name):
@@ -54,10 +57,16 @@ def moveBasedOnExtention(currentTime, file_path, move_folder, extention_list):
 
     for extention in extention_list:
         if file_data[1] == extention:
-            print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
-            os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
-            moved = True
-            break
+            if fileExtits(path+move_folder+"/"+file_data[0]+file_data[1]):
+                print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+"_"+file_data[1])+move_folder)
+                os.rename(file_path, path+move_folder+"/"+file_data[0]+"_"+file_data[1])
+                moved = True
+                break
+            else:
+                print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
+                os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
+                moved = True
+                break
     
     return moved
 
@@ -76,8 +85,12 @@ def moveIgnoringExtention(currentTime, file_path, move_folder, extention_list):
     
     # if not listed as ignored, proceed to move file
     if moveFile:
-        print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
-        os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
+        if fileExtits(path+move_folder+"/"+file_data[0]+file_data[1]):
+            print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+"_"+file_data[1])+move_folder)
+            os.rename(file_path, path+move_folder+"/"+file_data[0]+"_"+file_data[1])
+        else:
+            print("\033[33m"+currentTime+":\033[0m moving \033[32m{}\033[0m to ".format(file_data[0]+file_data[1])+move_folder)
+            os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
 
 
 class MyHandler(FileSystemEventHandler):
