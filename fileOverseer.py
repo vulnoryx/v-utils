@@ -132,7 +132,14 @@ class MyHandler(FileSystemEventHandler):
                 moveIgnoringExtention(  currentTime, f, other_files_folder,            ignore_extentions)
 
 if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
+    # set working path based on os (unless path provided via argument)
+    if sys.platform == "linux" or sys.platform == "linux2":
+        path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
+    elif sys.platform == "darwin":
+        path = sys.argv[1] if len(sys.argv) > 1 else '/Users/'+getpass.getuser()+'/Downloads/'
+    elif sys.platform == "win32":
+        path = sys.argv[1] if len(sys.argv) > 1 else 'C::\\Users\\'+getpass.getuser()+'\\Downloads\\'
+
     print(COLOR_YELLOW+"working directory: "+COLOR_WHITE+path)
 
     checkDefaultDirectories(path)
