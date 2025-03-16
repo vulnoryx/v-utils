@@ -5,6 +5,7 @@ import sys
 import getpass # for getting username
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import logging
 
 # color definition
 COLOR_RESET =   "\033[0m"
@@ -38,9 +39,9 @@ video_file_extentions =           ['.mp4', '.avi', '.webm', '.mkv', '.flv', '.vo
 executable_file_extentions =      ['.exe', '.bin', '.AppImage']
 
 ignore_extentions =               ['.crdownload', '.part', '.download', '.tmp', '.filepart', '.opdownload', '.!ut', '.bc!', '.dwl', '.asd',
-                                   '.wbk', '.swp', '.swo', '.lk', '.gz.tmp']
+                                   '.wbk', '.swp', '.swo', '.lk', '.gz.tmp', '.log']
 
-ignore_prefixes =                 ["Unconfirmed ", ".org.chromium.Chromium"]
+ignore_prefixes =                 ["Unconfirmed ", ".org.chromium.Chromium", "fileOverseer"]
 
 def fileExtits(path):
     return os.path.isfile(path)
@@ -52,13 +53,15 @@ def moveFile(currentTime, file_data, file_path, move_folder):
     currentTime = COLOR_YELLOW+currentTime+":"+COLOR_WHITE
 
     if fileExtits(path+move_folder+"/"+file_data[0]+file_data[1]):
-        print(currentTime+" moving "+COLOR_BLUE+"{}".format(file_data[0]+"_"+file_data[1])+COLOR_WHITE+" to "+move_folder)
         os.rename(file_path, path+move_folder+"/"+file_data[0]+"_"+file_data[1])
         moved = True
     else:
-        print(currentTime+" moving "+COLOR_BLUE+"{}".format(file_data[0]+file_data[1])+COLOR_WHITE+" to "+move_folder)
         os.rename(file_path, path+move_folder+"/"+file_data[0]+file_data[1])
         moved = True
+    
+    if moved:
+        print(currentTime+" moving '"+COLOR_BLUE+"{}".format(file_data[0]+file_data[1])+COLOR_WHITE+"' to "+move_folder)
+        logging.info("moved '"+file_data[0]+file_data[1]+"' to "+move_folder)
 
     return moved;
 
@@ -66,7 +69,9 @@ def moveFile(currentTime, file_data, file_path, move_folder):
 def createFolder(path, folder_name):
     if not os.path.exists(path+folder_name):
         os.makedirs(path+folder_name)
-        print("created "+folder_name+" folder")
+        createdFolderTxt = "created "+folder_name+" folder";
+        print(createdFolderTxt)
+        logging.info(createdFolderTxt)
 
 def checkDefaultDirectories(path):
     createFolder(path, pictures_folder)
@@ -132,6 +137,8 @@ class MyHandler(FileSystemEventHandler):
                 moveIgnoringExtention(  currentTime, f, other_files_folder,            ignore_extentions)
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s: %(message)s', datefmt='%Y-%m-%d %I:%M:%S', filename='fileOverseer.log', encoding='utf-8', level=logging.INFO)
+
     # set working path based on os (unless path provided via argument)
     if sys.platform == "linux" or sys.platform == "linux2":
         path = sys.argv[1] if len(sys.argv) > 1 else '/home/'+getpass.getuser()+'/Downloads/'
@@ -143,7 +150,7 @@ if __name__ == "__main__":
     print(COLOR_YELLOW+"working directory: "+COLOR_WHITE+path)
 
     checkDefaultDirectories(path)
-    
+
     # set up observer
     event_handler = MyHandler()
     observer = Observer()
@@ -155,6 +162,7 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        logging.info("program has been closed")
         observer.stop()
 
     observer.join()
